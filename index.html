@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StudyAI - Trợ lý số cho sinh viên</title>
+    
+    <!-- Thư viện jsPDF và html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <link rel="stylesheet" href="css/style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+    <!-- ============================================ -->
+    <!-- SIDEBAR -->
+    <!-- ============================================ -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <span class="brand-icon">🧠</span>
+            <span class="brand-name">StudyAI</span>
+        </div>
+        <nav class="sidebar-nav">
+            <button class="nav-btn active" data-tab="dashboard">
+                <span class="nav-icon">📊</span> Dashboard
+            </button>
+            <button class="nav-btn" data-tab="ai-assistant">
+                <span class="nav-icon">🤖</span> AI Assistant
+            </button>
+            <button class="nav-btn" data-tab="scheduler">
+                <span class="nav-icon">📅</span> Lịch học
+            </button>
+            <button class="nav-btn" data-tab="mental-health">
+                <span class="nav-icon">🧘</span> Sức khỏe tinh thần
+            </button>
+        </nav>
+        <div class="sidebar-footer">
+            <button class="theme-toggle" id="themeToggle">🌙</button>
+        </div>
+    </aside>
+
+    <!-- ============================================ -->
+    <!-- MAIN CONTENT -->
+    <!-- ============================================ -->
+    <main class="main-content">
+        
+        <!-- Tab: Dashboard -->
+        <section id="dashboard" class="tab-content active">
+            <div class="dashboard-wrapper">
+                <h1>📊 Dashboard dữ liệu sinh viên</h1>
+                <p class="subtitle">Phân tích từ 3 file CSV: AI Assistant Usage, Stress Dataset, Stress Level Dataset</p>
+
+                <!-- Thống kê tổng quan -->
+                <div class="stats-overview" id="statsOverview">
+                    <div class="stat-card">
+                        <span class="stat-label">📚 Tổng số lịch học</span>
+                        <span class="stat-value" id="totalSchedules">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">⏱️ Giờ học trung bình</span>
+                        <span class="stat-value" id="avgHours">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">📝 Môn học yêu thích</span>
+                        <span class="stat-value" id="favSubject">--</span>
+                    </div>
+                </div>
+
+                <!-- Thống kê cá nhân -->
+                <div class="chart-container" id="personalStatsContainer">
+                    <h3>📊 Thống kê học tập cá nhân</h3>
+                    <div id="personalStats"></div>
+                </div>
+
+                <!-- Biểu đồ 1: Kết quả học tập -->
+                <div class="chart-container">
+                    <h3>📈 Kết quả học tập theo môn</h3>
+                    <canvas id="gradesChart" width="400" height="200"></canvas>
+                </div>
+
+                <!-- Biểu đồ 2: Mức độ căng thẳng -->
+                <div class="chart-container">
+                    <h3>😰 Mức độ căng thẳng theo ngày</h3>
+                    <canvas id="stressChart" width="400" height="200"></canvas>
+                </div>
+
+                <!-- Biểu đồ 3: AI Assistant Usage -->
+                <div class="chart-container">
+                    <h3>🤖 Sử dụng AI Assistant</h3>
+                    <canvas id="aiUsageChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab: AI Assistant -->
+        <section id="ai-assistant" class="tab-content">
+            <div class="assistant-wrapper">
+                <h1>🤖 AI Assistant thông minh</h1>
+                <p class="subtitle">Hỏi đáp về học tập, lịch trình, và sức khỏe tinh thần</p>
+                
+                <div class="chat-box" id="chatBox">
+                    <div class="chat-message bot">
+                        <span class="chat-avatar">🤖</span>
+                        <div class="chat-bubble">
+                            Xin chào! Tôi là trợ lý AI của StudyAI. Tôi có thể giúp bạn:
+                            <ul>
+                                <li>Lên lịch học tập hiệu quả</li>
+                                <li>Quản lý căng thẳng</li>
+                                <li>Mẹo học tập thông minh</li>
+                                <li>Và nhiều hơn nữa!</li>
+                            </ul>
+                            Hãy thử hỏi tôi nhé 😊
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-wrapper">
+                    <input type="text" id="chatInput" placeholder="Nhập câu hỏi của bạn..." />
+                    <button id="chatSendBtn">Gửi</button>
+                    <button id="chatClearBtn">Xóa</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab: Lịch học -->
+        <section id="scheduler" class="tab-content">
+            <div class="scheduler-wrapper">
+                <h1>📅 Lịch học thông minh</h1>
+                <p class="subtitle">Tạo và quản lý thời khóa biểu của bạn</p>
+
+                <div class="scheduler-grid">
+                    <!-- Form tạo lịch -->
+                    <div class="schedule-form">
+                        <h3>Tạo lịch mới</h3>
+                        <form id="scheduleForm">
+                            <div class="form-group">
+                                <label>Môn học</label>
+                                <input type="text" id="subject" placeholder="VD: Toán cao cấp" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Ngày</label>
+                                <input type="date" id="date" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Giờ bắt đầu</label>
+                                <input type="time" id="startTime" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Giờ kết thúc</label>
+                                <input type="time" id="endTime" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Ghi chú</label>
+                                <input type="text" id="note" placeholder="Ghi chú thêm..." />
+                            </div>
+                            <button type="submit" class="btn-primary">➕ Thêm lịch</button>
+                        </form>
+
+                        <!-- Tìm kiếm lịch -->
+                        <div class="search-section">
+                            <h3>🔍 Tìm kiếm lịch</h3>
+                            <input type="text" id="searchSchedule" placeholder="Tìm theo môn học..." />
+                            <button id="searchScheduleBtn" class="btn-secondary">Tìm</button>
+                            <button id="clearSearchBtn" class="btn-secondary">Xóa tìm</button>
+                        </div>
+                    </div>
+
+                    <!-- Danh sách lịch -->
+                    <div class="schedule-list">
+                        <div class="schedule-header">
+                            <h3>Danh sách lịch học</h3>
+                            <button id="exportPdfBtn" class="btn-primary">📄 Xuất PDF</button>
+                        </div>
+                        <div id="scheduleList">
+                            <p style="color: #64748b; text-align: center; padding: 20px;">Chưa có lịch học nào.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab: Sức khỏe tinh thần -->
+        <section id="mental-health" class="tab-content">
+            <div class="mental-wrapper">
+                <h1>🧘 Sức khỏe tinh thần</h1>
+                <p class="subtitle">Theo dõi và cải thiện tinh thần của bạn</p>
+
+                <div class="mental-grid">
+                    <div class="mental-card">
+                        <h3>📝 Nhật ký cảm xúc</h3>
+                        <form id="moodForm">
+                            <div class="form-group">
+                                <label>Cảm xúc hiện tại</label>
+                                <select id="moodSelect">
+                                    <option value="happy">😊 Vui vẻ</option>
+                                    <option value="neutral">😐 Bình thường</option>
+                                    <option value="sad">😢 Buồn</option>
+                                    <option value="stressed">😰 Căng thẳng</option>
+                                    <option value="angry">😡 Tức giận</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Ghi chú</label>
+                                <textarea id="moodNote" placeholder="Bạn đang nghĩ gì?"></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary">💾 Lưu cảm xúc</button>
+                        </form>
+                    </div>
+
+                    <div class="mental-card">
+                        <h3>📊 Lịch sử cảm xúc</h3>
+                        <div id="moodHistory">
+                            <p style="color: #64748b; text-align: center; padding: 20px;">Chưa có dữ liệu.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================ -->
+    <!-- TOAST CONTAINER & LOADING OVERLAY -->
+    <!-- ============================================ -->
+    <div id="toastContainer" class="toast-container"></div>
+    
+    <div id="loadingOverlay" class="loading-overlay" style="display:none;">
+        <div class="loading-spinner"></div>
+        <p id="loadingMessage">Đang xử lý...</p>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SCRIPTS -->
+    <!-- ============================================ -->
+    <script src="js/utils.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/ai-assistant.js"></script>
+    <script src="js/scheduler.js"></script>
+    <script src="js/mental-health.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
